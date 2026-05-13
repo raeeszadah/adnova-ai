@@ -1,0 +1,190 @@
+Product Requirements Document (PRD)
+Project: AI Video Ads Generator
+Version: 1.0
+Date: 2026-05-13
+Owner: Mohammad Raees
+
+1) Product Overview
+AI Video Ads Generator enables users to create ad videos by:
+- entering a topic/script idea
+- selecting an avatar and voice
+- generating a talking-avatar video
+- previewing and managing generated ads in a workspace
+
+Current stack:
+- Frontend: Next.js App Router, React, Tailwind, shadcn UI
+- Auth: Clerk
+- Data: Convex
+- Async jobs: Inngest
+- Video/preview: Remotion
+- External AI/Media APIs: HeyGen (migrated from Akool), OpenRouter (script generation), ImageKit (asset upload), PayPal (billing)
+
+2) Problem Statement
+Small businesses and creators need fast ad-video production without manual filming/editing. Existing workflows are slow, expensive, and require video skills.
+
+3) Goals
+Primary goals:
+- Generate ad-ready talking-avatar videos in minutes.
+- Keep UX simple for non-technical users.
+- Ensure reliable async processing and status tracking.
+
+Secondary goals:
+- Improve generation quality and template flexibility.
+- Add better operational observability and error handling.
+- Reduce support burden with clear error states and docs.
+
+4) Non-Goals (Current Release)
+- Advanced timeline editor
+- Multi-scene cinematic editing
+- Team collaboration/roles
+- Full enterprise governance controls
+
+5) Target Users
+- Small business owners
+- Marketers/freelancers
+- Social media creators
+- Agency operators handling repeated ad generation
+
+6) User Stories
+- As a user, I can sign in and access my workspace.
+- As a user, I can create a new ad draft and write/generate script content.
+- As a user, I can select avatar and voice from provider lists.
+- As a user, I can upload assets and generate a video.
+- As a user, I can view generation status (queued/processing/completed/failed).
+- As a user, I can preview completed ad videos.
+- As a user, I can see credits and billing actions.
+
+7) Functional Requirements
+7.1 Authentication & Access
+- Clerk-authenticated access to workspace routes.
+- Public access only to explicitly allowed routes/API endpoints.
+
+7.2 Workspace & Draft Management
+- Create/read/update ad draft records in Convex.
+- Persist selected script, avatar, voice, assets, and generated outputs.
+- Show dashboard list with status filtering (processing/completed/failed).
+
+7.3 Script Generation
+- Generate script variants using OpenRouter model.
+- User can edit selected script before generation.
+
+7.4 Avatar & Voice Selection
+- Fetch avatar list from HeyGen.
+- Fetch voice list from HeyGen.
+- Normalize provider responses into UI-friendly schema.
+
+7.5 Video Generation
+- Trigger async generation event via Inngest.
+- Inngest submits HeyGen generation request with avatar + script/voice.
+- Poll status endpoint until completed/failed.
+- Save final video URL in Convex when completed.
+
+7.6 Asset Upload
+- Upload user assets to ImageKit.
+- Validate required ImageKit env variables before upload.
+- Fail gracefully with user-visible message when missing/invalid.
+
+7.7 Billing/Credits
+- Track user credits in Convex.
+- Deduct credits on generation trigger.
+- Handle payment confirmation and credit top-up flow via PayPal.
+- Prevent generation when credits are insufficient.
+
+8) Non-Functional Requirements
+- Availability: core generation flow should be resilient to transient API errors.
+- Performance: lists and dashboard actions should feel responsive (<2s initial load target in normal conditions).
+- Reliability: async jobs should be idempotent and status-consistent.
+- Security:
+  - No private keys exposed client-side.
+  - Secrets only in server env.
+  - Validate all external API failures and return safe error responses.
+- Observability:
+  - Structured logs for generation submission/polling/failure.
+  - Track job lifecycle and provider error codes.
+
+9) UX Requirements
+- Clear loading states for script, avatar list, voice list, and generation.
+- Explicit error toasts/messages for:
+  - Unauthorized provider key
+  - Missing env configuration
+  - Provider timeout/failure
+- Status chips in dashboard:
+  - Queued
+  - Processing
+  - Completed
+  - Failed
+- Retry action for failed generation.
+
+10) API & Data Requirements
+Internal API routes:
+- /api/generate-script
+- /api/get-avatar-list
+- /api/get-voice-list
+- /api/create-avatar
+- /api/create-voice (optional compatibility)
+
+Core data entities (Convex):
+- users: identity + credits
+- videoData: topic/script/assets/avatar/voice/status/output URL
+
+Status model:
+- 1 = processing/queued
+- 2 = completed
+- 3 = failed (recommended addition if not present consistently)
+
+11) Known Risks / Current Gaps
+- Provider auth failures (HeyGen 401) block avatar/voice lists and generation.
+- Duplicate/overlapping create-ad pages increase maintenance risk.
+- Some route/public-access config can accidentally block required API calls.
+- Error handling gaps can surface as generic failures without actionable context.
+- Client-side upload/security patterns need stricter hardening long-term.
+- README/env docs currently insufficient for smooth setup.
+
+12) Success Metrics (MVP)
+- >90% successful generation completion rate (excluding provider outages).
+- <5% user sessions with unrecoverable generation errors.
+- Median time from “Generate” click to completion under acceptable SLA (target 2-6 min depending on provider load).
+- Avatar and voice list load success rate >99% with valid key.
+- Reduction in support tickets tied to setup/auth/config errors.
+
+13) Milestones
+M1: Stabilize Core Flow
+- Fix route access and API response consistency.
+- Harden error handling and user feedback.
+- Validate provider auth and env diagnostics.
+
+M2: Quality + Reliability
+- Improve retry logic and timeout handling.
+- Add structured logs and status recovery logic.
+- Add minimal test coverage for API routes and generation state transitions.
+
+M3: Product Polish
+- Consolidate duplicate page implementations.
+- Improve dashboard filtering and retry UX.
+- Improve docs and onboarding flow.
+
+14) Acceptance Criteria (Release Ready)
+- User can complete full flow from draft to playable video with valid keys.
+- Avatar and voice lists load with normalized display data.
+- Failed provider/auth cases show clear, actionable messages.
+- Generated video URL is persisted and visible in dashboard preview.
+- Credits update correctly and consistently.
+- No critical runtime crashes on missing optional envs (graceful error path).
+
+15) Environment Variables (Required)
+- NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+- CLERK_SECRET_KEY
+- NEXT_PUBLIC_CONVEX_URL
+- CONVEX_DEPLOYMENT
+- OPENROUTER_API_KEY
+- HEYGEN_API_KEY
+- NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
+- NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY (security review recommended)
+- NEXT_PUBLIC_IMAGEKIT_URL
+- PayPal related envs (if billing is enabled)
+
+16) Open Questions
+- Should voice generation be fully inside HeyGen video call (text mode only), or keep separate TTS path?
+- What are final credit pricing rules per generation length/quality?
+- Do we need webhook-driven completion instead of polling for scalability?
+- What minimum analytics events are required for product decisions?
