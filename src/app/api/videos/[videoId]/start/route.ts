@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { fetchMutation } from "@/lib/convex-server";
 import { api } from "../../../../../../convex/_generated/api";
-import { runVideoPipeline } from "@/lib/video-pipeline";
+import { enqueueVideoPipeline } from "@/lib/inngest-enqueue";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 30;
 
 export async function POST(
   req: NextRequest,
@@ -43,15 +42,19 @@ export async function POST(
       status: "PROCESSING_AVATAR",
     });
 
-    after(async () => {
-      await runVideoPipeline(videoId, userId);
-    });
+    const { queued } = await enqueueVideoPipeline(videoId, userId);
 
-    return NextResponse.json({
-      videoId,
-      status: "PROCESSING_AVATAR",
-      message: "Video generation started",
-    });
+    return NextResponse.json(
+      {
+        videoId,
+        status: "PROCESSING_AVATAR",
+        queued,
+        message: queued
+          ? "Video generation queued — track progress in My Videos"
+          : "Video generation started in background",
+      },
+      { status: queued ? 202 : 200 }
+    );
   } catch (error) {
     console.error("Start pipeline error:", error);
     return NextResponse.json(

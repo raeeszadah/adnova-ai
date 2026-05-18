@@ -51,17 +51,17 @@ function DemoVideoModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm sm:p-6"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="demo-modal-title"
     >
       <div
-        className="footer-glass relative w-full max-w-4xl overflow-hidden rounded-3xl border border-border shadow-2xl"
+        className="footer-glass relative my-auto w-full max-w-4xl max-h-[min(90dvh,calc(100vh-2rem))] overflow-hidden overflow-y-auto rounded-2xl border border-border shadow-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
           <h2
             id="demo-modal-title"
             className="font-headline text-xl font-bold text-foreground"
@@ -78,7 +78,7 @@ function DemoVideoModal({
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {DEMO_VIDEO_URL ? (
             <div className="aspect-video overflow-hidden rounded-2xl border border-border bg-black">
               <video

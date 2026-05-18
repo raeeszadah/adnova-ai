@@ -14,7 +14,7 @@ export function AdminAnalyticsClient() {
   }
 
   return (
-    <div className="space-y-8 page-enter">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 page-enter sm:space-y-8">
       <div>
         <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">Analytics</h1>
         <p className="text-muted-foreground mt-1">Credits, usage, and growth</p>

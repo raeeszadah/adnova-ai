@@ -23,8 +23,8 @@ export function LandingTopNav() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 flex h-16 w-full items-center justify-between gap-3 border-b border-white/5 bg-background/80 px-4 backdrop-blur-xl sm:h-20 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 items-center gap-3 sm:gap-12">
+      <nav className="sticky top-0 z-50 flex h-16 w-full min-w-0 items-center justify-between gap-2 border-b border-white/5 bg-background/80 px-4 backdrop-blur-xl sm:h-20 sm:gap-3 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-12">
           <Link
             href="/"
             className="flex shrink-0 items-center transition-opacity hover:opacity-90"

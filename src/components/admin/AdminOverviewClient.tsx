@@ -22,7 +22,7 @@ export function AdminOverviewClient() {
   }
 
   return (
-    <div className="space-y-8 page-enter">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 page-enter sm:space-y-8">
       <div>
         <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">Platform overview</h1>
         <p className="text-muted-foreground mt-1">
@@ -98,7 +98,7 @@ export function AdminOverviewClient() {
           <div className="space-y-2">
             {Object.entries(data.apiByType).map(([type, count]) => (
               <div key={type} className="flex items-center gap-3">
-                <span className="text-xs font-mono w-28 truncate">{type}</span>
+                <span className="w-20 shrink-0 truncate font-mono text-xs sm:w-28">{type}</span>
                 <div className="flex-1 h-2 rounded-full bg-foreground/10 overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full"

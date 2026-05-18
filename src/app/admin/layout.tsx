@@ -27,7 +27,7 @@ export default async function AdminLayout({
             className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-90"
           >
             <BrandLogo variant="mark" size="md" />
-            <span className="font-headline text-lg font-extrabold tracking-tighter">
+            <span className="truncate font-headline text-base font-extrabold tracking-tighter sm:text-lg">
               Admin
             </span>
           </Link>

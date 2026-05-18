@@ -52,7 +52,7 @@ export default async function DashboardPage() {
   const recentVideos = videos.slice(0, 5);
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/dashboard/create"
-          className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(209,255,0,0.3)] hover:scale-105 transition-transform inline-flex items-center justify-center gap-2"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_0_15px_rgba(209,255,0,0.3)] transition-transform hover:scale-105 sm:w-auto"
         >
           <AppIcon name="add_circle" size="lg" />
           Create Video
@@ -89,8 +89,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="bg-surface border border-border rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-lg font-bold">Recent Videos</h2>
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <h2 className="text-base font-bold sm:text-lg">Recent Videos</h2>
           {videos.length > 0 && (
             <Link
               href="/dashboard/videos"
@@ -115,30 +115,32 @@ export default async function DashboardPage() {
             {recentVideos.map((video) => (
               <div
                 key={video._id}
-                className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors"
+                className="flex flex-col gap-3 p-4 transition-colors hover:bg-white/5 sm:flex-row sm:items-center sm:gap-4"
               >
-                <div className="w-20 h-14 rounded-lg bg-black/30 overflow-hidden flex-shrink-0">
-                  {(video as { playbackUrl?: string }).playbackUrl ? (
-                    <VideoPlayer
-                      videoId={video._id}
-                      className="w-full h-full object-cover"
-                      preview
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <AppIcon name="movie" size="xl" className="text-muted-foreground" />
-                    </div>
-                  )}
+                <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                  <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-black/30">
+                    {(video as { playbackUrl?: string }).playbackUrl ? (
+                      <VideoPlayer
+                        videoId={video._id}
+                        className="h-full w-full object-cover"
+                        preview
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <AppIcon name="movie" size="xl" className="text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">
+                      {video.title ?? "Untitled Ad"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(video._creationTime).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">
-                    {video.title ?? "Untitled Ad"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(video._creationTime).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="text-xs font-bold uppercase px-2 py-1 rounded-full bg-black/30 border border-border">
+                <span className="max-w-full shrink-0 self-start truncate rounded-full border border-border bg-black/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wide sm:self-center sm:text-xs">
                   {video.status}
                 </span>
               </div>

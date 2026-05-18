@@ -13,7 +13,7 @@ export function AdminVideosClient() {
   });
 
   return (
-    <div className="space-y-6 page-enter">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 page-enter">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">Video monitoring</h1>

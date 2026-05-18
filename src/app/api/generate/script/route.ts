@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { fetchMutation } from "@/lib/convex-server";
 import { api } from "../../../../../convex/_generated/api";
-import { generateAdScript } from "@/lib/generate-script";
 import { ensureConvexUser } from "@/lib/ensure-convex-user";
+import { enqueueScriptGeneration } from "@/lib/inngest-enqueue";
+import { runScriptGenerationStep } from "@/lib/pipeline/steps";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const startTime = Date.now();
   const { userId } = await auth();
 
   if (!userId) {
@@ -28,27 +29,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { script, provider } = await generateAdScript(title, description);
+    const id = videoId as Id<"videos">;
+    const payload = {
+      videoId,
+      clerkId: userId,
+      title,
+      description,
+      avatarId,
+      voiceId,
+    };
 
-    try {
-      await fetchMutation(api.apiLogs.createLog, {
-        requestId: crypto.randomUUID(),
-        apiType: provider === "MOCK" ? "GEMINI_MOCK" : provider,
-        status: "SUCCESS",
-        processingTime: Date.now() - startTime,
-      });
-    } catch {
-      /* non-blocking */
+    const { queued } = await enqueueScriptGeneration(payload);
+
+    if (queued) {
+      return NextResponse.json(
+        {
+          videoId,
+          status: "GENERATING_SCRIPT",
+          queued: true,
+          message: "Script generation queued",
+        },
+        { status: 202 }
+      );
     }
 
-    await fetchMutation(api.videos.updateScript, {
-      videoId: videoId as Id<"videos">,
-      script,
-      avatarId: avatarId || undefined,
-      voiceId: voiceId || undefined,
+    const { script, provider } = await runScriptGenerationStep({
+      videoId: id,
+      title,
+      description,
+      avatarId,
+      voiceId,
     });
-
-    return NextResponse.json({ script, videoId, provider });
+    return NextResponse.json({ script, videoId, provider, queued: false });
   } catch (error) {
     console.error("Script generation error:", error);
 

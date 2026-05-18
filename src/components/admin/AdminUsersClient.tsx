@@ -30,7 +30,7 @@ export function AdminUsersClient() {
   };
 
   return (
-    <div className="space-y-6 page-enter">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 page-enter">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">User management</h1>
@@ -54,9 +54,104 @@ export function AdminUsersClient() {
       {users === undefined ? (
         <Skeleton className="h-64 rounded-2xl" />
       ) : (
-        <div className="footer-glass rounded-2xl border border-border overflow-hidden">
+        <>
+          <div className="space-y-3 lg:hidden">
+            {users.map((u) => (
+              <article
+                key={u._id}
+                className="footer-glass rounded-2xl border border-border p-4"
+              >
+                <div className="mb-3 min-w-0">
+                  <p className="truncate font-semibold">{u.name ?? "—"}</p>
+                  <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+                  {u.role === "admin" ? (
+                    <span className="text-[10px] font-bold uppercase text-secondary">
+                      Admin
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mb-3 grid grid-cols-2 gap-2 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">Credits: </span>
+                    <span className="font-bold text-primary">{u.credits}</span>
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Plan: </span>
+                    <span className="font-bold">{u.plan ?? "FREE"}</span>
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Videos: </span>
+                    <span className="font-bold">{u.videoCount}</span>
+                  </p>
+                  <p>
+                    {u.suspended ? (
+                      <span className="text-xs font-bold text-destructive">Suspended</span>
+                    ) : (
+                      <span className="text-xs font-bold text-primary">Active</span>
+                    )}
+                  </p>
+                </div>
+                {u.role !== "admin" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-lg border border-border px-3 py-2 text-xs hover:bg-primary/10"
+                      onClick={() =>
+                        act(() => adjustCredits({ userId: u._id, delta: 5 }), "Added 5 credits")
+                      }
+                    >
+                      +5 credits
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-border px-3 py-2 text-xs hover:bg-primary/10"
+                      onClick={() =>
+                        act(() => setCredits({ userId: u._id, credits: 2 }), "Set to 2 credits")
+                      }
+                    >
+                      Reset 2
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-border px-3 py-2 text-xs hover:bg-foreground/10"
+                      onClick={() =>
+                        act(
+                          () =>
+                            setPlan({
+                              userId: u._id,
+                              plan: u.plan === "PRO" ? "FREE" : "PRO",
+                            }),
+                          "Plan toggled"
+                        )
+                      }
+                    >
+                      Toggle plan
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-destructive/30 px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
+                      onClick={() =>
+                        act(
+                          () =>
+                            setSuspended({
+                              userId: u._id,
+                              suspended: !u.suspended,
+                            }),
+                          u.suspended ? "Unsuspended" : "Suspended"
+                        )
+                      }
+                    >
+                      {u.suspended ? "Unsuspend" : "Suspend"}
+                    </button>
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+
+          <div className="footer-glass hidden overflow-hidden rounded-2xl border border-border lg:block">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="p-4 font-bold">User</th>
@@ -157,6 +252,7 @@ export function AdminUsersClient() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );

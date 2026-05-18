@@ -10,7 +10,7 @@ export function AuthShell({
   variant?: "sign-in" | "sign-up";
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:py-12">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-8 sm:py-12">
       <div className="footer-glow-primary pointer-events-none absolute inset-0" />
       <div className="footer-glow-secondary pointer-events-none absolute inset-0" />
 

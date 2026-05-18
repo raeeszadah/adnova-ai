@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
+import { resolveShellHeaderTitle } from "@/lib/shell-header-titles";
 import { cn } from "@/lib/utils";
 
 type AppShellLayoutProps = {
@@ -26,6 +27,7 @@ export function AppShellLayout({
 }: AppShellLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const resolvedTitle = resolveShellHeaderTitle(pathname, headerTitle);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -51,7 +53,7 @@ export function AppShellLayout({
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-dvh max-h-dvh overflow-hidden bg-background text-foreground">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-black/5 backdrop-blur-xl lg:flex">
         {sidebarPanel}
       </aside>
@@ -74,7 +76,7 @@ export function AppShellLayout({
         />
         <aside
           className={cn(
-            "absolute inset-y-0 left-0 flex w-[min(100%,18rem)] max-w-[85vw] flex-col border-r border-border bg-background shadow-2xl transition-transform duration-300 ease-out",
+            "absolute inset-y-0 left-0 flex w-[min(100%,18rem)] max-w-[85vw] flex-col border-r border-border bg-background shadow-2xl transition-transform duration-300 ease-out overscroll-contain pb-[env(safe-area-inset-bottom)]",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
           role="dialog"
@@ -98,11 +100,11 @@ export function AppShellLayout({
               <Menu className="h-5 w-5" aria-hidden />
             </button>
             <h2 className="truncate font-headline text-base font-bold sm:text-lg">
-              {headerTitle}
+              {resolvedTitle}
             </h2>
           </div>
           {headerActions && (
-            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            <div className="flex max-w-[45%] shrink-0 items-center gap-2 sm:max-w-none sm:gap-4">
               {headerActions}
             </div>
           )}

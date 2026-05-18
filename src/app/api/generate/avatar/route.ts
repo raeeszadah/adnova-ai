@@ -3,28 +3,29 @@ import { auth } from "@clerk/nextjs/server";
 import { fetchMutation } from "@/lib/convex-server";
 import { api } from "../../../../../convex/_generated/api";
 import { ensureConvexUser } from "@/lib/ensure-convex-user";
-import { generateHeyGenAvatarVideo } from "@/lib/heygen";
+import { enqueueVideoPipeline } from "@/lib/inngest-enqueue";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 30;
 
+/**
+ * Queues the full avatar + Remotion pipeline (non-blocking).
+ * Prefer POST /api/videos/[videoId]/start from the create wizard.
+ */
 export async function POST(req: NextRequest) {
-  const startTime = Date.now();
   const { userId } = await auth();
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let videoId: Id<"videos"> | undefined;
-
   try {
     await ensureConvexUser(userId);
 
     const body = await req.json();
     const { script, avatarId, voiceId } = body;
-    videoId = body.videoId as Id<"videos">;
+    const videoId = body.videoId as Id<"videos">;
 
     if (!script || !videoId) {
       return NextResponse.json(
@@ -33,67 +34,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await generateHeyGenAvatarVideo(script, {
+    await fetchMutation(api.videos.updateScript, {
+      videoId,
+      script,
       avatarId,
       voiceId,
-      serverWaitMs: 4.5 * 60 * 1000,
     });
 
-    if (result.avatarVideoUrl) {
-      await fetchMutation(api.videos.updateAvatar, {
-        videoId: videoId as Id<"videos">,
-        avatarVideoUrl: result.avatarVideoUrl,
-        heygenVideoId: result.videoId,
-      });
-    } else {
-      await fetchMutation(api.videos.setStatus, {
-        videoId: videoId as Id<"videos">,
+    await fetchMutation(api.videos.setStatus, {
+      videoId,
+      status: "PROCESSING_AVATAR",
+    });
+
+    const { queued } = await enqueueVideoPipeline(videoId, userId);
+
+    return NextResponse.json(
+      {
+        videoId,
         status: "PROCESSING_AVATAR",
-        heygenVideoId: result.videoId,
-      });
-    }
-
-    const apiType = result.mockFallback
-      ? "HEYGEN_MOCK"
-      : process.env.HEYGEN_API_KEY &&
-          process.env.HEYGEN_API_KEY !== "placeholder"
-        ? "HEYGEN"
-        : "HEYGEN_MOCK";
-
-    await fetchMutation(api.apiLogs.createLog, {
-      requestId: crypto.randomUUID(),
-      apiType,
-      status: "SUCCESS",
-      processingTime: Date.now() - startTime,
-    });
-
-    return NextResponse.json({
-      avatarVideoUrl: result.avatarVideoUrl,
-      heygenVideoId: result.videoId,
-      status: result.status ?? "completed",
-      warning: result.warning,
-      mockFallback: result.mockFallback,
-    });
+        queued,
+        message: "Avatar and video render queued",
+      },
+      { status: 202 }
+    );
   } catch (error) {
-    console.error("HeyGen Error:", error);
-
-    if (videoId) {
-      await fetchMutation(api.videos.markFailed, {
-        videoId: videoId as Id<"videos">,
-        errorMessage:
-          error instanceof Error ? error.message : "Avatar generation failed",
-      });
-    }
-
-    await fetchMutation(api.apiLogs.createLog, {
-      requestId: crypto.randomUUID(),
-      apiType: "HEYGEN",
-      status: "FAILED",
-      processingTime: Date.now() - startTime,
-    });
-
-    const message =
-      error instanceof Error ? error.message : "Failed to generate avatar video";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("HeyGen queue error:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to queue avatar generation",
+      },
+      { status: 500 }
+    );
   }
 }

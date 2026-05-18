@@ -31,6 +31,8 @@ export default defineSchema({
     heygenVideoId: v.optional(v.string()),
     status: v.string(),
     errorMessage: v.optional(v.string()),
+    pipelinePhase: v.optional(v.string()),
+    pipelineProgress: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
     .index("by_status", ["status"]),

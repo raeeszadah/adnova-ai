@@ -29,7 +29,14 @@ export const getPlatformOverview = query({
       (v) => v.status === "FAILED" || v.errorMessage
     ).length;
     const processingVideos = videos.filter((v) =>
-      ["PENDING", "PROCESSING_AVATAR", "COMPOSING"].includes(v.status)
+      [
+        "PENDING",
+        "GENERATING_SCRIPT",
+        "SCRIPT_GENERATED",
+        "PROCESSING_AVATAR",
+        "AVATAR_GENERATED",
+        "COMPOSING",
+      ].includes(v.status)
     ).length;
 
     const videosToday = videos.filter(

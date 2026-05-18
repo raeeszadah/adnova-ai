@@ -32,7 +32,7 @@ export default function RootLayout({
       className={`${manrope.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="flex min-h-dvh flex-col overflow-x-hidden font-sans">
         <ThemeProvider>
           <ConvexClientProvider>
             <NavigationProvider>{children}</NavigationProvider>

@@ -28,9 +28,14 @@ export async function GET(
   return NextResponse.json({
     videoId: video._id,
     status: video.status,
+    script: video.script,
     finalVideoUrl: video.finalVideoUrl,
+    playbackUrl: video.playbackUrl,
     avatarVideoUrl: video.avatarVideoUrl,
+    heygenVideoId: video.heygenVideoId,
     errorMessage: video.errorMessage,
     title: video.title,
+    pipelinePhase: video.pipelinePhase,
+    pipelineProgress: video.pipelineProgress,
   });
 }

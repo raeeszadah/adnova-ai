@@ -14,6 +14,10 @@ import {
   VideoGenerationProgress,
   type GenerationPhase,
 } from "@/components/loading/VideoGenerationProgress";
+import {
+  mapVideoJobToPhase,
+  mapVideoJobToProgress,
+} from "@/lib/video-status-ui";
 
 type Avatar = {
   avatar_id: string;
@@ -56,6 +60,13 @@ export default function CreateVideoWizard() {
   const [warning, setWarning] = useState<string | null>(null);
   const [genPhase, setGenPhase] = useState<GenerationPhase>("script");
   const [genProgress, setGenProgress] = useState(0);
+  const [awaitingScript, setAwaitingScript] = useState(false);
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+
+  const videoJob = useQuery(
+    api.videos.getStatusForUser,
+    videoId && userId ? { videoId, clerkId: userId } : "skip"
+  );
 
   const selectedAvatarData = avatars.find((a) => a.avatar_id === selectedAvatar);
 
@@ -88,6 +99,61 @@ export default function CreateVideoWizard() {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (!awaitingScript || !videoJob) return;
+
+    if (videoJob.status === "FAILED") {
+      setError(videoJob.errorMessage ?? "Script generation failed");
+      setAwaitingScript(false);
+      setIsGenerating(false);
+      return;
+    }
+
+    if (videoJob.script && videoJob.status === "SCRIPT_GENERATED") {
+      setScript(videoJob.script);
+      setGenProgress(18);
+      setStep(2);
+      setAwaitingScript(false);
+      setIsGenerating(false);
+      return;
+    }
+
+    if (videoJob.status === "GENERATING_SCRIPT") {
+      setGenPhase("script");
+      setGenProgress(mapVideoJobToProgress(videoJob));
+    }
+  }, [awaitingScript, videoJob]);
+
+  useEffect(() => {
+    if (!pipelineRunning || step !== 3 || !videoJob) return;
+
+    setGenPhase(mapVideoJobToPhase(videoJob));
+    setGenProgress(mapVideoJobToProgress(videoJob));
+
+    if (videoJob.status === "PROCESSING_AVATAR" && videoJob.heygenVideoId) {
+      setStatusMessage(
+        "HeyGen is rendering your avatar — usually 3–10 minutes. You can leave this page."
+      );
+    } else if (videoJob.status === "COMPOSING") {
+      setStatusMessage("Rendering your final ad with Remotion…");
+    }
+
+    if (videoJob.status === "COMPLETED") {
+      setFinalVideoUrl(videoJob.playbackUrl ?? videoJob.finalVideoUrl ?? "");
+      setGenProgress(100);
+      setGenPhase("finalize");
+      setPipelineRunning(false);
+      setStep(4);
+      return;
+    }
+
+    if (videoJob.status === "FAILED") {
+      setError(videoJob.errorMessage ?? "Video generation failed");
+      setPipelineRunning(false);
+      setStep(2);
+    }
+  }, [pipelineRunning, step, videoJob]);
 
   const handleGenerateScript = async () => {
     if (!imageFile) return;
@@ -145,46 +211,21 @@ export default function CreateVideoWizard() {
       if (!scriptRes.ok)
         throw new Error(scriptData.error ?? "Failed to generate script");
 
+      if (scriptRes.status === 202 || scriptData.queued) {
+        setAwaitingScript(true);
+        setGenProgress(10);
+        setStatusMessage("AI is writing your script in the background…");
+        return;
+      }
+
       setScript(scriptData.script);
       setGenProgress(18);
       setStep(2);
+      setIsGenerating(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
       setIsGenerating(false);
     }
-  };
-
-  const pollHeyGenUntilReady = async (
-    heygenVideoId: string,
-    maxMinutes = 15
-  ): Promise<string> => {
-    const deadline = Date.now() + maxMinutes * 60 * 1000;
-    let pollCount = 0;
-    while (Date.now() < deadline) {
-      pollCount += 1;
-      const res = await fetch(
-        `/api/heygen/video-status?heygenVideoId=${encodeURIComponent(heygenVideoId)}`
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error ?? "Failed to check HeyGen status");
-      }
-      if (data.status === "completed" && data.videoUrl) {
-        return data.videoUrl as string;
-      }
-      if (data.status === "failed") {
-        throw new Error(data.error ?? "HeyGen avatar generation failed");
-      }
-      setStatusMessage(
-        `HeyGen is rendering your avatar (${data.status ?? "processing"})… usually 3–10 minutes.`
-      );
-      setGenProgress((p) => Math.min(72, 38 + pollCount * 3));
-      await new Promise((r) => setTimeout(r, 5_000));
-    }
-    throw new Error(
-      "HeyGen is still rendering after 15 minutes. Check My Videos later or try a shorter script."
-    );
   };
 
   const handleGenerateVideo = async () => {
@@ -201,74 +242,32 @@ export default function CreateVideoWizard() {
     setWarning(null);
     setGenPhase("avatar");
     setGenProgress(22);
+    setPipelineRunning(true);
+    setStatusMessage("Queued — avatar render and final compose run in the background…");
 
     try {
-      setStatusMessage("Starting HeyGen avatar render…");
-      const avatarRes = await fetch("/api/generate/avatar", {
+      const startRes = await fetch(`/api/videos/${videoId}/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           script,
-          videoId,
           avatarId: selectedAvatar,
           voiceId: selectedVoice,
         }),
       });
-      const avatarData = await avatarRes.json();
-      if (!avatarRes.ok) {
-        throw new Error(avatarData.error ?? "Avatar generation failed");
+      const startData = await startRes.json();
+      if (!startRes.ok) {
+        throw new Error(startData.error ?? "Failed to start video generation");
       }
-      if (avatarData.warning) {
-        setWarning(avatarData.warning);
-      }
-
-      let avatarVideoUrl = avatarData.avatarVideoUrl as string | undefined;
-      if (!avatarVideoUrl && avatarData.status === "processing") {
-        setGenPhase("heygen");
-        setGenProgress(35);
-        avatarVideoUrl = await pollHeyGenUntilReady(
-          avatarData.heygenVideoId as string
-        );
-      } else {
-        setGenPhase("compose");
-        setGenProgress(55);
-      }
-      if (!avatarVideoUrl) {
-        throw new Error("No avatar video URL from HeyGen");
-      }
-
-      setGenPhase("compose");
-      setGenProgress(78);
-      setStatusMessage(
-        "Downloading avatar clip, then rendering final ad (this is faster than before)…"
-      );
-      const composeRes = await fetch("/api/generate/compose", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoId,
-          avatarVideoUrl,
-          scriptText: script,
-        }),
-      });
-      const composeData = await composeRes.json();
-      if (!composeRes.ok) {
-        throw new Error(composeData.error ?? "Video composition failed");
-      }
-
-      setGenPhase("finalize");
-      setGenProgress(96);
-      setFinalVideoUrl(composeData.finalUrl);
-      setGenProgress(100);
-      setStep(4);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Video generation failed");
+      setPipelineRunning(false);
       setStep(2);
     }
   };
 
   const stepIndicator = (
-    <div className="flex items-center gap-2 mb-4 flex-wrap">
+    <div className="-mx-1 mb-4 flex items-center gap-2 overflow-x-auto px-1 pb-1 scrollbar-thin sm:flex-wrap sm:overflow-visible">
       {[
         { num: 1, label: "Product Details" },
         { num: 2, label: "Review Script" },
@@ -305,7 +304,7 @@ export default function CreateVideoWizard() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6">
       <div>
         <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">
           Create Video Ad
@@ -486,7 +485,7 @@ export default function CreateVideoWizard() {
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
                   Selected avatar
                 </p>
-                <div className="flex gap-4 items-center">
+                <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
                   {selectedAvatarData.preview_image_url ? (
                     <img
                       src={selectedAvatarData.preview_image_url}
@@ -514,27 +513,27 @@ export default function CreateVideoWizard() {
       )}
 
       {step >= 2 && (
-        <div className="bg-surface border border-border p-8 rounded-3xl shadow-lg max-w-3xl mx-auto">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface p-4 shadow-lg sm:rounded-3xl sm:p-6 lg:p-8">
           {step === 2 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Review AI Script</h2>
+              <h2 className="text-xl font-bold sm:text-2xl">Review AI Script</h2>
               <textarea
                 value={script}
                 onChange={(e) => setScript(e.target.value)}
-                className="w-full h-64 bg-black/5 border border-border rounded-xl p-4 text-lg leading-relaxed"
+                className="h-48 w-full resize-none rounded-xl border border-border bg-black/5 p-4 text-base leading-relaxed sm:h-64 sm:text-lg"
               />
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-1/3 py-4 rounded-xl font-bold border border-border hover:bg-white/5"
+                  className="w-full rounded-xl border border-border py-4 font-bold hover:bg-white/5 sm:w-1/3"
                 >
                   Back
                 </button>
                 <button
                   type="button"
                   onClick={handleGenerateVideo}
-                  className="w-2/3 bg-primary text-primary-foreground py-4 rounded-xl font-bold"
+                  className="w-full rounded-xl bg-primary py-4 font-bold text-primary-foreground sm:flex-[2]"
                 >
                   Generate Final Video
                 </button>
@@ -571,18 +570,18 @@ export default function CreateVideoWizard() {
                   />
                 )}
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <button
                   type="button"
                   onClick={() => router.push("/dashboard/videos")}
-                  className="flex-1 py-4 rounded-xl font-bold border border-border"
+                  className="w-full flex-1 rounded-xl border border-border py-4 font-bold sm:w-auto"
                 >
                   My Videos
                 </button>
                 {videoId ? (
                   <a
                     href={`/api/videos/${videoId}/playback?download=1`}
-                    className="flex-1 bg-primary text-primary-foreground py-4 rounded-xl font-bold flex justify-center items-center gap-2"
+                    className="flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground sm:w-auto"
                   >
                     <AppIcon name="download" size="md" />
                     Download
@@ -593,7 +592,7 @@ export default function CreateVideoWizard() {
                     download
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 bg-primary text-primary-foreground py-4 rounded-xl font-bold flex justify-center items-center gap-2"
+                    className="flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-primary-foreground sm:w-auto"
                   >
                     <AppIcon name="download" size="md" />
                     Download

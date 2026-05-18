@@ -51,7 +51,7 @@ export function SiteFooter() {
       <div className="footer-glow-primary pointer-events-none absolute inset-0" />
       <div className="footer-glow-secondary pointer-events-none absolute inset-0" />
 
-      <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-20">
+      <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4 space-y-5">
             <Link

@@ -1,26 +1,22 @@
 import React from "react";
 import {
   AbsoluteFill,
-  Img,
-  OffthreadVideo,
   Sequence,
-  interpolate,
-  spring,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-
-/** Resolve staged assets (public/) or remote https URLs for Remotion. */
-function resolveMediaSrc(src: string): string {
-  if (src.startsWith("http://") || src.startsWith("https://")) {
-    return src;
-  }
-  if (src.startsWith("remotion-render/")) {
-    return staticFile(src);
-  }
-  return staticFile(src);
-}
+import { sceneCrossfade } from "./lib/motion";
+import {
+  getSceneTiming,
+  pickCtaLine,
+  pickStoryLines,
+  splitScriptLines,
+} from "./lib/script";
+import { AnimatedBackground } from "./scenes/AnimatedBackground";
+import { CtaScene } from "./scenes/CtaScene";
+import { KineticSubtitle } from "./scenes/KineticSubtitle";
+import { MainAdScene } from "./scenes/MainAdScene";
+import { ProductRevealScene } from "./scenes/ProductRevealScene";
 
 export type AdCompositionProps = {
   avatarVideoUrl: string;
@@ -28,47 +24,25 @@ export type AdCompositionProps = {
   scriptText: string;
 };
 
-function splitScriptLines(script: string): string[] {
-  return script
-    .split(/\n+/)
-    .map((line) => line.replace(/^(Hook|Benefits|CTA|Call to Action):\s*/i, "").trim())
-    .filter(Boolean);
-}
-
-const SubtitleLine: React.FC<{ text: string }> = ({ text }) => {
+/** Layer opacities for crossfading story beats. */
+const SceneLayer: React.FC<{
+  fadeInStart: number;
+  fadeInEnd: number;
+  fadeOutStart: number;
+  fadeOutEnd: number;
+  children: React.ReactNode;
+}> = ({ fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd, children }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const opacity = spring({ frame, fps, config: { damping: 200 } });
 
-  return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: 120,
-        left: 40,
-        right: 40,
-        textAlign: "center",
-        opacity,
-        transform: `translateY(${interpolate(opacity, [0, 1], [20, 0])}px)`,
-      }}
-    >
-      <span
-        style={{
-          backgroundColor: "rgba(0,0,0,0.75)",
-          color: "#D1FF00",
-          padding: "12px 24px",
-          borderRadius: 12,
-          fontSize: 36,
-          fontWeight: 800,
-          fontFamily: "system-ui, sans-serif",
-          lineHeight: 1.3,
-          display: "inline-block",
-        }}
-      >
-        {text}
-      </span>
-    </div>
-  );
+  const fadeIn = sceneCrossfade(frame, fadeInStart, fadeInEnd).to;
+  const fadeOut =
+    fadeOutEnd > fadeOutStart
+      ? 1 - sceneCrossfade(frame, fadeOutStart, fadeOutEnd).to
+      : 1;
+
+  const opacity = Math.min(fadeIn, fadeOut);
+
+  return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
 
 export const AdComposition: React.FC<AdCompositionProps> = ({
@@ -78,75 +52,89 @@ export const AdComposition: React.FC<AdCompositionProps> = ({
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const lines = splitScriptLines(scriptText);
+  const storyLines = pickStoryLines(lines);
+  const ctaLine = pickCtaLine(lines);
+  const { revealEnd, ctaStart, crossfade } = getSceneTiming(durationInFrames);
+
+  const mainStart = revealEnd - crossfade;
+  const ctaFadeStart = ctaStart - crossfade;
+
+  const subtitleWindow = Math.max(ctaStart - mainStart, fps * 2);
   const framesPerLine = Math.max(
-    Math.floor(durationInFrames / Math.max(lines.length, 1)),
-    fps * 2
+    Math.floor(subtitleWindow / Math.max(storyLines.length, 1)),
+    Math.floor(fps * 2)
   );
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
+    <AbsoluteFill style={{ backgroundColor: "#05070a" }}>
+      <AnimatedBackground />
+
+      {/* Act 1 — cinematic product reveal */}
+      <SceneLayer
+        fadeInStart={0}
+        fadeInEnd={8}
+        fadeOutStart={revealEnd - crossfade}
+        fadeOutEnd={revealEnd}
+      >
+        <ProductRevealScene productImageUrl={productImageUrl} />
+      </SceneLayer>
+
+      {/* Act 2 — avatar + dynamic floating product showcase */}
+      <SceneLayer
+        fadeInStart={mainStart}
+        fadeInEnd={revealEnd}
+        fadeOutStart={ctaFadeStart}
+        fadeOutEnd={ctaStart}
+      >
+        <MainAdScene
+          avatarVideoUrl={avatarVideoUrl}
+          productImageUrl={productImageUrl}
+          sceneStartFrame={mainStart}
+          sceneEndFrame={ctaStart}
+        />
+      </SceneLayer>
+
+      {/* Act 3 — motion CTA finale */}
+      <SceneLayer
+        fadeInStart={ctaFadeStart}
+        fadeInEnd={ctaStart}
+        fadeOutStart={durationInFrames}
+        fadeOutEnd={durationInFrames}
+      >
+        <CtaScene
+          productImageUrl={productImageUrl}
+          ctaText={ctaLine}
+          sceneStartFrame={ctaStart}
+        />
+      </SceneLayer>
+
+      {/* Kinetic subtitles during main story (hidden during reveal + CTA) */}
+      {storyLines.map((line, index) => {
+        const from = mainStart + index * framesPerLine;
+        if (from >= ctaStart - fps) return null;
+
+        return (
+          <Sequence
+            key={`${index}-${line.slice(0, 24)}`}
+            from={from}
+            durationInFrames={Math.min(framesPerLine, ctaStart - from)}
+          >
+            <KineticSubtitle text={line} />
+          </Sequence>
+        );
+      })}
+
+      {/* Brand vignette */}
       <AbsoluteFill
         style={{
-          background:
-            "radial-gradient(circle at 50% 0%, rgba(209,255,0,0.15), transparent 60%)",
+          pointerEvents: "none",
+          boxShadow: "inset 0 0 120px rgba(0,0,0,0.55)",
         }}
       />
-
-      <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center" }}>
-        <div
-          style={{
-            marginTop: 40,
-            width: "88%",
-            height: "52%",
-            borderRadius: 24,
-            overflow: "hidden",
-            border: "3px solid rgba(209,255,0,0.4)",
-            boxShadow: "0 0 40px rgba(209,255,0,0.2)",
-          }}
-        >
-          <OffthreadVideo
-            src={resolveMediaSrc(avatarVideoUrl)}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            acceptableTimeShiftInSeconds={1}
-            pauseWhenBuffering={false}
-          />
-        </div>
-      </AbsoluteFill>
-
-      <AbsoluteFill
-        style={{
-          justifyContent: "flex-end",
-          alignItems: "center",
-          paddingBottom: 280,
-        }}
-      >
-        <div
-          style={{
-            width: 340,
-            height: 340,
-            borderRadius: 24,
-            overflow: "hidden",
-            border: "4px solid #D1FF00",
-            boxShadow: "0 12px 48px rgba(0,0,0,0.6)",
-            backgroundColor: "#111",
-          }}
-        >
-          <Img
-            src={resolveMediaSrc(productImageUrl)}
-            style={{ width: "100%", height: "100%", objectFit: "contain" }}
-          />
-        </div>
-      </AbsoluteFill>
-
-      {lines.map((line, index) => (
-        <Sequence
-          key={`${index}-${line.slice(0, 20)}`}
-          from={index * framesPerLine}
-          durationInFrames={framesPerLine}
-        >
-          <SubtitleLine text={line} />
-        </Sequence>
-      ))}
     </AbsoluteFill>
   );
 };
+
+// Re-export helpers used by the render pipeline
+export { splitScriptLines } from "./lib/script";
+export { resolveMediaSrc } from "./lib/media";

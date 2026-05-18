@@ -15,7 +15,7 @@ export function AdminApiLogsClient() {
   });
 
   return (
-    <div className="space-y-6 page-enter">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 page-enter">
       <div>
         <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">API logs</h1>
         <p className="text-muted-foreground mt-1">Gemini, HeyGen, Remotion, and more</p>
@@ -47,9 +47,38 @@ export function AdminApiLogsClient() {
       {logs === undefined ? (
         <Skeleton className="h-64 rounded-2xl" />
       ) : (
-        <div className="footer-glass rounded-2xl border border-border overflow-hidden">
-          <div className="overflow-x-auto max-h-[32rem] overflow-y-auto">
-            <table className="w-full text-sm">
+        <>
+          <div className="max-h-[32rem] space-y-3 overflow-y-auto lg:hidden">
+            {logs.map((log) => (
+              <article
+                key={log._id}
+                className="footer-glass rounded-xl border border-border p-4 text-sm"
+              >
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-bold">{log.apiType}</span>
+                  <span
+                    className={
+                      log.status === "FAILED"
+                        ? "text-xs font-bold text-destructive"
+                        : "text-xs font-bold text-primary"
+                    }
+                  >
+                    {log.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(log._creationTime).toLocaleString()} · {log.processingTime}ms
+                </p>
+                {log.message ? (
+                  <p className="mt-2 break-words text-xs text-muted-foreground">{log.message}</p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+
+          <div className="footer-glass hidden overflow-hidden rounded-2xl border border-border lg:block">
+          <div className="max-h-[32rem] overflow-x-auto overflow-y-auto">
+            <table className="w-full min-w-[520px] text-sm">
               <thead className="sticky top-0 bg-card/95 backdrop-blur">
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="p-3 font-bold">Type</th>
@@ -87,6 +116,7 @@ export function AdminApiLogsClient() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );

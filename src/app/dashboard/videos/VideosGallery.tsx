@@ -61,7 +61,7 @@ export function VideosGallery({ videos: initial }: { videos: Video[] }) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">
@@ -71,7 +71,7 @@ export function VideosGallery({ videos: initial }: { videos: Video[] }) {
         </div>
         <Link
           href="/dashboard/create"
-          className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(209,255,0,0.3)] hover:scale-105 transition-transform inline-flex items-center gap-2"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground shadow-[0_0_15px_rgba(209,255,0,0.3)] transition-transform hover:scale-105 sm:w-auto"
         >
           <AppIcon name="add_circle" size="md" />
           Create Video
@@ -151,7 +151,7 @@ export function VideosGallery({ videos: initial }: { videos: Video[] }) {
                       {video.errorMessage}
                     </p>
                   )}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {playable && (
                       <>
                         <button
@@ -189,14 +189,14 @@ export function VideosGallery({ videos: initial }: { videos: Video[] }) {
 
       {previewVideo && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-y-auto bg-black/90 p-4 sm:p-6"
           onClick={() => setPreviewId(null)}
           onKeyDown={(e) => e.key === "Escape" && setPreviewId(null)}
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="max-w-4xl w-full space-y-3"
+            className="my-auto w-full max-w-4xl min-w-0 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between text-white">

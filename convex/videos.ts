@@ -73,12 +73,16 @@ export const getStatusForUser = query({
     return {
       _id: video._id,
       status: video.status,
+      script: video.script,
       finalVideoUrl: video.finalVideoUrl,
       finalStorageId: video.finalStorageId,
       playbackUrl,
       avatarVideoUrl: video.avatarVideoUrl,
+      heygenVideoId: video.heygenVideoId,
       errorMessage: video.errorMessage,
       title: video.title,
+      pipelinePhase: video.pipelinePhase,
+      pipelineProgress: video.pipelineProgress,
     };
   },
 });
@@ -148,6 +152,24 @@ export const updateFinal = mutation({
       finalStorageId: args.finalStorageId,
       status: args.status,
       errorMessage: undefined,
+    });
+  },
+});
+
+export const updatePipelineProgress = mutation({
+  args: {
+    videoId: v.id("videos"),
+    pipelinePhase: v.optional(v.string()),
+    pipelineProgress: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.videoId, {
+      ...(args.pipelinePhase !== undefined
+        ? { pipelinePhase: args.pipelinePhase }
+        : {}),
+      ...(args.pipelineProgress !== undefined
+        ? { pipelineProgress: args.pipelineProgress }
+        : {}),
     });
   },
 });

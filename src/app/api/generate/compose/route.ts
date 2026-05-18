@@ -3,32 +3,27 @@ import { auth } from "@clerk/nextjs/server";
 import { fetchMutation, fetchQuery } from "@/lib/convex-server";
 import { api } from "../../../../../convex/_generated/api";
 import { ensureConvexUser } from "@/lib/ensure-convex-user";
-import {
-  cleanupRenderFile,
-  renderAdVideo,
-} from "@/lib/remotion-render";
-import { uploadFileToConvex } from "@/lib/storage-upload";
+import { enqueueVideoCompose } from "@/lib/inngest-enqueue";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 30;
 
+/**
+ * Queues Remotion composition only (avatar must already exist).
+ */
 export async function POST(req: NextRequest) {
-  const startTime = Date.now();
   const { userId } = await auth();
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let videoId: Id<"videos"> | null = null;
-  let outputPath: string | null = null;
-
   try {
     await ensureConvexUser(userId);
 
     const body = await req.json();
-    videoId = body.videoId as Id<"videos">;
+    const videoId = body.videoId as Id<"videos">;
 
     if (!videoId) {
       return NextResponse.json({ error: "Missing videoId" }, { status: 400 });
@@ -39,81 +34,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    const avatarVideoUrl =
-      body.avatarVideoUrl ?? video.avatarVideoUrl;
-    const productImageUrl =
-      body.productImageUrl ?? video.productImageUrl;
-    const scriptText = body.scriptText ?? video.script;
-
-    if (!avatarVideoUrl || !productImageUrl || !scriptText) {
+    const avatarVideoUrl = body.avatarVideoUrl ?? video.avatarVideoUrl;
+    if (!avatarVideoUrl) {
       return NextResponse.json(
-        {
-          error:
-            "Missing avatar video, product image, or script for composition",
-        },
+        { error: "Avatar video required before composition" },
         { status: 400 }
       );
     }
 
-    outputPath = await renderAdVideo({
-      avatarVideoUrl,
-      productImageUrl,
-      scriptText,
-    });
-
-    const { storageId, url: finalVideoUrl } = await uploadFileToConvex(
-      outputPath,
-      "video/mp4"
-    );
-
-    await fetchMutation(api.videos.updateFinal, {
-      videoId,
-      finalVideoUrl,
-      finalStorageId: storageId,
-      status: "COMPLETED",
-    });
-
-    await fetchMutation(api.apiLogs.createLog, {
-      requestId: crypto.randomUUID(),
-      apiType: "REMOTION",
-      status: "SUCCESS",
-      processingTime: Date.now() - startTime,
-    });
-
-    await fetchMutation(api.users.decrementCredits, {
-      clerkId: userId,
-      amount: 1,
-    });
-
-    return NextResponse.json({
-      finalUrl: finalVideoUrl,
-      status: "completed",
-      videoId,
-    });
-  } catch (error) {
-    console.error("Remotion Error:", error);
-
-    if (videoId) {
-      await fetchMutation(api.videos.markFailed, {
+    if (body.avatarVideoUrl && body.avatarVideoUrl !== video.avatarVideoUrl) {
+      await fetchMutation(api.videos.updateAvatar, {
         videoId,
-        errorMessage:
-          error instanceof Error ? error.message : "Video composition failed",
+        avatarVideoUrl: body.avatarVideoUrl,
       });
     }
 
-    await fetchMutation(api.apiLogs.createLog, {
-      requestId: crypto.randomUUID(),
-      apiType: "REMOTION",
-      status: "FAILED",
-      processingTime: Date.now() - startTime,
+    await fetchMutation(api.videos.setStatus, {
+      videoId,
+      status: "COMPOSING",
     });
 
-    const message =
-      error instanceof Error ? error.message : "Failed to compose video";
-    return NextResponse.json({ error: message }, { status: 500 });
-  } finally {
-    if (outputPath) {
-      await cleanupRenderFile(outputPath);
-    }
+    const { queued } = await enqueueVideoCompose(videoId, userId);
+
+    return NextResponse.json(
+      {
+        videoId,
+        status: "COMPOSING",
+        queued,
+        message: "Video composition queued",
+      },
+      { status: 202 }
+    );
+  } catch (error) {
+    console.error("Compose queue error:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to queue composition",
+      },
+      { status: 500 }
+    );
   }
 }

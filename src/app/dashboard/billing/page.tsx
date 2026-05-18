@@ -29,7 +29,7 @@ export default async function BillingPage() {
   const user = await fetchQuery(api.users.getUserWithVideos, { clerkId: userId });
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="mx-auto w-full min-w-0 max-w-4xl space-y-6 sm:space-y-8">
       <div>
         <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">Billing & Credits</h1>
         <p className="text-muted-foreground">
@@ -38,11 +38,11 @@ export default async function BillingPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-        <div className="bg-surface border border-border rounded-3xl p-8 relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6 sm:rounded-3xl sm:p-8">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-[50px] rounded-full" />
           <h3 className="text-lg font-bold text-foreground mb-2">Current Credits</h3>
           <div
-            className="text-5xl font-extrabold text-primary mb-6"
+            className="mb-6 text-4xl font-extrabold text-primary sm:text-5xl"
             style={{ textShadow: "0 0 15px rgba(209,255,0,0.2)" }}
           >
             {user?.credits ?? 0}
@@ -52,7 +52,7 @@ export default async function BillingPage() {
           </p>
         </div>
 
-        <div className="bg-surface border border-border rounded-3xl p-8 relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6 sm:rounded-3xl sm:p-8">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/10 blur-[50px] rounded-full" />
           <h3 className="text-lg font-bold text-foreground mb-2">Current Plan</h3>
           <div className="text-3xl font-extrabold text-foreground mb-2">{user?.plan || "FREE"}</div>
