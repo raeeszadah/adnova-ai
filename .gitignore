@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
@@ -30,12 +31,27 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env & secrets (template is tracked — see `.env.example`)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
 
 # vercel
 .vercel
 
-# typescript
+# typescript / tooling
 *.tsbuildinfo
-next-env.d.ts
+.turbo
+
+# IDE (optional — remove if your team commits shared settings)
+.idea/
+
+# Remotion render staging (prefetched clips — not for VCS)
+/public/remotion-render/*
+!/public/remotion-render/.gitkeep
+
+# Legacy / unused (project uses Convex, not Prisma client here)
+/src/generated/prisma

@@ -1,0 +1,50 @@
+/** AdNova AI — Clerk UI theme (dark SaaS + lime primary) */
+export const clerkAppearance = {
+  variables: {
+    colorPrimary: "#d1ff00",
+    colorPrimaryForeground: "#000000",
+    colorBackground: "#0d1117",
+    colorInputBackground: "#05070a",
+    colorInputText: "#ffffff",
+    colorText: "#ffffff",
+    colorTextSecondary: "#94a3b8",
+    colorDanger: "#ef4444",
+    colorSuccess: "#d1ff00",
+    colorWarning: "#f59e0b",
+    colorNeutral: "#64748b",
+    borderRadius: "0.75rem",
+    fontFamily: "var(--font-inter), system-ui, sans-serif",
+    fontFamilyButtons: "var(--font-manrope), system-ui, sans-serif",
+  },
+  elements: {
+    rootBox: "w-full",
+    card: "footer-glass w-full max-w-[440px] rounded-2xl border border-border shadow-2xl bg-[#0d1117]/95 backdrop-blur-xl",
+    cardBox: "shadow-none",
+    headerTitle: "font-headline text-2xl font-extrabold tracking-tight text-foreground",
+    headerSubtitle: "text-muted-foreground text-sm",
+    socialButtonsBlockButton:
+      "border border-border bg-foreground/5 text-foreground hover:bg-foreground/10 transition-all",
+    socialButtonsBlockButtonText: "font-semibold text-foreground",
+    dividerLine: "bg-border",
+    dividerText: "text-muted-foreground text-xs uppercase tracking-wider",
+    formFieldLabel: "text-foreground text-sm font-medium",
+    formFieldInput:
+      "rounded-xl border-border bg-[#05070a] text-foreground focus:border-primary focus:ring-primary/30",
+    formFieldInputShowPasswordButton: "text-muted-foreground hover:text-primary",
+    formButtonPrimary:
+      "rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all shadow-[0_0_16px_rgba(209,255,0,0.2)]",
+    formButtonReset: "text-primary hover:text-primary/80",
+    footerActionLink: "text-primary font-semibold hover:underline",
+    footerActionText: "text-muted-foreground",
+    identityPreviewEditButton: "text-primary",
+    formFieldErrorText: "text-destructive text-xs",
+    alertText: "text-sm",
+    otpCodeFieldInput: "rounded-xl border-border bg-[#05070a] text-foreground",
+    navbar: "hidden",
+    footer: "bg-transparent",
+  },
+  layout: {
+    socialButtonsPlacement: "top",
+    showOptionalFields: false,
+  },
+};
