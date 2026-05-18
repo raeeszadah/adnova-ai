@@ -1,16 +1,12 @@
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { Suspense } from "react";
 import Link from "next/link";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import {
-  LandingDemoButton,
-} from "@/components/landing/LandingDemoContext";
-import { LandingNavActions } from "@/components/landing/LandingNavActions";
-import { LandingNavLinks } from "@/components/landing/LandingNavLinks";
+import { LandingDemoButton } from "@/components/landing/LandingDemoContext";
 import { LandingAuthToast } from "@/components/landing/LandingAuthToast";
+import { LandingTopNav } from "@/components/landing/LandingTopNav";
 import { AppIcon } from "@/components/icons";
-import { BrandLogo } from "@/components/brand";
 import { LandingPageShell } from "@/components/landing/LandingPageShell";
+import { Show, SignUpButton } from "@clerk/nextjs";
 
 export default function Home() {
   return (
@@ -18,53 +14,20 @@ export default function Home() {
       <Suspense fallback={null}>
         <LandingAuthToast />
       </Suspense>
-      {/* TopNavBar */}
-      <nav className="bg-background/80 backdrop-blur-xl flex justify-between items-center w-full px-8 h-20 sticky top-0 z-50 border-b border-white/5">
-        <div className="flex min-w-0 shrink-0 items-center gap-12">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center hover:opacity-90 transition-opacity"
-            aria-label="AdNova AI home"
-          >
-            <BrandLogo size="nav" priority />
-          </Link>
-          <LandingNavLinks />
-        </div>
-        <div className="flex shrink-0 items-center gap-4 sm:gap-6">
-          <LandingNavActions />
-          <Show when="signed-out">
-            <SignInButton mode="redirect" forceRedirectUrl="/auth/redirect">
-              <button className="text-foreground px-6 py-2.5 rounded-full font-bold text-sm hover:bg-foreground/5 transition-all">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="redirect" forceRedirectUrl="/auth/redirect">
-              <button className="bg-primary text-black px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 active:scale-95 duration-200 transition-all shadow-[0_0_14px_rgba(209,255,0,0.22)]">
-                Get Started
-              </button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/dashboard" className="bg-primary text-black px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 active:scale-95 duration-200 transition-all shadow-[0_0_14px_rgba(209,255,0,0.22)] inline-flex items-center">
-              Dashboard
-            </Link>
-            <UserButton />
-          </Show>
-        </div>
-      </nav>
+      <LandingTopNav />
 
       <main className="bg-[radial-gradient(circle_at_50%_-20%,rgba(0,74,198,0.15)_0%,rgba(247,249,251,0)_60%)]">
         {/* Hero Section */}
-        <section className="relative pt-24 pb-32 px-8">
+        <section className="relative px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-20 lg:px-8 lg:pb-32 lg:pt-24">
           <div className="max-w-7xl mx-auto text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-xl border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8">
               <AppIcon name="bolt" size="sm" active />
               Next-Gen Video Ads
             </div>
-            <h1 className="font-headline text-7xl md:text-8xl font-extrabold text-foreground leading-[1.05] tracking-tight mb-8 max-w-5xl mx-auto">
+            <h1 className="mx-auto mb-6 max-w-5xl font-headline text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:mb-8 sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
               Scale Your Ad Creative with <span className="text-primary" style={{ textShadow: "0 0 15px rgba(0,74,198,0.2)" }}>AI Avatars</span>
             </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed mb-12 max-w-2xl mx-auto">
+            <p className="mx-auto mb-8 max-w-2xl text-base leading-relaxed text-muted-foreground sm:mb-12 sm:text-lg lg:text-xl">
               Transform product images into high-converting talking avatar video ads in minutes. Professional production at the speed of thought.
             </p>
             <div className="flex flex-wrap justify-center gap-6">
@@ -101,7 +64,7 @@ export default function Home() {
               </div>
               
               {/* Floating Glass Card */}
-              <div className="absolute bottom-8 left-8 bg-white/5 backdrop-blur-xl p-6 rounded-2xl max-w-sm border-l-4 border-primary shadow-lg">
+              <div className="absolute bottom-4 left-4 hidden max-w-[calc(100%-2rem)] rounded-2xl border-l-4 border-primary bg-white/5 p-4 shadow-lg backdrop-blur-xl sm:bottom-8 sm:left-8 sm:block sm:max-w-sm sm:p-6">
                 <div className="flex items-center gap-4 mb-3">
                   <div className="flex -space-x-3">
                     <div className="w-10 h-10 rounded-full border-2 border-background overflow-hidden bg-slate-800"></div>
@@ -122,7 +85,7 @@ export default function Home() {
 
         {/* Social Proof */}
         <section className="py-16 border-y border-border bg-foreground/[0.02]">
-          <div className="max-w-7xl mx-auto px-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <p className="text-center text-muted-foreground font-sans text-xs uppercase tracking-[0.3em] mb-12 font-bold">Trusted by global platforms</p>
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-40 hover:opacity-100 transition-opacity duration-700">
               <div className="flex items-center gap-2 font-headline font-bold text-2xl text-foreground">
@@ -142,16 +105,16 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-32 px-8 relative overflow-hidden">
+        <section className="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-24">
-              <h2 className="font-headline text-5xl font-extrabold text-foreground mb-6">Built for Conversion</h2>
-              <p className="text-muted-foreground text-xl max-w-2xl mx-auto">Our engine combines the best AI technologies to deliver studio-quality ads at scale.</p>
+              <h2 className="mb-4 font-headline text-3xl font-extrabold text-foreground sm:mb-6 sm:text-4xl lg:text-5xl">Built for Conversion</h2>
+              <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg lg:text-xl">Our engine combines the best AI technologies to deliver studio-quality ads at scale.</p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
               {/* Feature 1 */}
-              <div className="bg-foreground/5 backdrop-blur-xl p-12 rounded-[2.5rem] hover:bg-foreground/10 hover:border-primary/30 transition-all duration-500 group border border-border">
+              <div className="group rounded-3xl border border-border bg-foreground/5 p-6 backdrop-blur-xl transition-all duration-500 hover:border-primary/30 hover:bg-foreground/10 sm:rounded-[2.5rem] sm:p-8 lg:p-12">
                 <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-primary mb-10 group-hover:shadow-[0_0_20px_rgba(0,74,198,0.3)] transition-all">
                   <AppIcon name="auto_awesome" size="2xl" active />
                 </div>
@@ -165,7 +128,7 @@ export default function Home() {
               </div>
               
               {/* Feature 2 */}
-              <div className="bg-foreground/5 backdrop-blur-xl p-12 rounded-[2.5rem] hover:bg-foreground/10 hover:border-accent/30 transition-all duration-500 group border border-border">
+              <div className="group rounded-3xl border border-border bg-foreground/5 p-6 backdrop-blur-xl transition-all duration-500 hover:border-accent/30 hover:bg-foreground/10 sm:rounded-[2.5rem] sm:p-8 lg:p-12">
                 <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-accent mb-10 group-hover:shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all">
                   <AppIcon name="face" size="2xl" active />
                 </div>
@@ -179,7 +142,7 @@ export default function Home() {
               </div>
               
               {/* Feature 3 */}
-              <div className="bg-foreground/5 backdrop-blur-xl p-12 rounded-[2.5rem] hover:bg-foreground/10 hover:border-primary/30 transition-all duration-500 group border border-border">
+              <div className="group rounded-3xl border border-border bg-foreground/5 p-6 backdrop-blur-xl transition-all duration-500 hover:border-primary/30 hover:bg-foreground/10 sm:rounded-[2.5rem] sm:p-8 lg:p-12">
                 <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-primary mb-10 group-hover:shadow-[0_0_20px_rgba(0,74,198,0.3)] transition-all">
                   <AppIcon name="rocket_launch" size="2xl" active />
                 </div>
@@ -196,13 +159,13 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-32 px-8">
-          <div className="max-w-5xl mx-auto rounded-[3rem] bg-foreground/5 backdrop-blur-xl p-20 text-center relative overflow-hidden border border-primary/20 shadow-lg">
+        <section className="px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
+          <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-primary/20 bg-foreground/5 p-8 text-center shadow-lg backdrop-blur-xl sm:rounded-[2.5rem] sm:p-12 lg:rounded-[3rem] lg:p-20">
             <div className="absolute inset-0 bg-primary/5 -z-10"></div>
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 blur-[100px] rounded-full"></div>
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-accent/20 blur-[100px] rounded-full"></div>
-            <h2 className="font-headline text-6xl font-extrabold mb-8 text-foreground">Ready to boost your sales?</h2>
-            <p className="text-muted-foreground text-xl mb-12 max-w-2xl mx-auto">
+            <h2 className="mb-6 font-headline text-3xl font-extrabold text-foreground sm:mb-8 sm:text-4xl lg:text-6xl">Ready to boost your sales?</h2>
+            <p className="mx-auto mb-8 max-w-2xl text-base text-muted-foreground sm:mb-12 sm:text-lg lg:text-xl">
               Join thousands of ecommerce brands generating high-performance video ads with AdNova AI.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">

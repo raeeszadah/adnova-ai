@@ -26,19 +26,43 @@ const LINKS = [
 const linkBase =
   "relative rounded-md px-1 py-1.5 font-headline text-sm font-medium tracking-wide transition-colors duration-200";
 
-/** Inactive: strong lime underline + glow only on hover */
 const inactiveClass =
   "text-muted-foreground after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:rounded-full after:bg-primary/80 after:shadow-[0_0_12px_rgba(209,255,0,0.35)] after:opacity-0 after:transition-opacity after:duration-200 hover:text-foreground hover:after:opacity-100";
 
-/** Active: subtle rail by default; same underline + glow on hover */
 const activeClass =
   "text-foreground font-semibold after:pointer-events-none after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-primary/55 after:shadow-none after:transition-all after:duration-200 hover:after:inset-x-0 hover:after:h-px hover:after:bg-primary/80 hover:after:shadow-[0_0_12px_rgba(209,255,0,0.35)]";
 
-export function LandingNavLinks() {
+const mobileLinkBase =
+  "block rounded-xl px-4 py-3 text-sm font-semibold transition-colors";
+
+const mobileInactive =
+  "text-muted-foreground hover:bg-foreground/5 hover:text-foreground";
+
+const mobileActive =
+  "border border-primary/25 bg-primary/[0.12] text-foreground";
+
+type LandingNavLinksProps = {
+  className?: string;
+  onNavigate?: () => void;
+  variant?: "desktop" | "mobile";
+};
+
+export function LandingNavLinks({
+  className,
+  onNavigate,
+  variant = "desktop",
+}: LandingNavLinksProps) {
   const pathname = usePathname() ?? "";
+  const isMobile = variant === "mobile";
 
   return (
-    <div className="hidden gap-8 md:flex">
+    <nav
+      className={cn(
+        isMobile ? "flex flex-col gap-1" : "hidden gap-8 lg:flex",
+        className
+      )}
+      aria-label="Main navigation"
+    >
       {LINKS.map(({ href, label, match }) => {
         const isActive = match(pathname);
 
@@ -46,13 +70,18 @@ export function LandingNavLinks() {
           <Link
             key={href}
             href={href}
-            className={cn(linkBase, isActive ? activeClass : inactiveClass)}
+            onClick={onNavigate}
+            className={cn(
+              isMobile
+                ? cn(mobileLinkBase, isActive ? mobileActive : mobileInactive)
+                : cn(linkBase, isActive ? activeClass : inactiveClass)
+            )}
             aria-current={isActive ? "page" : undefined}
           >
             {label}
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }

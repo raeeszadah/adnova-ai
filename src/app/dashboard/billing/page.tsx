@@ -31,13 +31,13 @@ export default async function BillingPage() {
   return (
     <div className="max-w-4xl space-y-8">
       <div>
-        <h1 className="text-3xl font-headline font-extrabold text-foreground mb-2">Billing & Credits</h1>
+        <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">Billing & Credits</h1>
         <p className="text-muted-foreground">
           Manage your subscription plan and purchase more video generation credits.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
         <div className="bg-surface border border-border rounded-3xl p-8 relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-[50px] rounded-full" />
           <h3 className="text-lg font-bold text-foreground mb-2">Current Credits</h3>

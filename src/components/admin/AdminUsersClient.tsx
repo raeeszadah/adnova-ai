@@ -33,7 +33,7 @@ export function AdminUsersClient() {
     <div className="space-y-6 page-enter">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline text-3xl font-extrabold">User management</h1>
+          <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">User management</h1>
           <p className="text-muted-foreground mt-1">Search, credits, plans, suspension</p>
         </div>
         <input

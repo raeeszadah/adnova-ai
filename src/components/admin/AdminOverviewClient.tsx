@@ -24,7 +24,7 @@ export function AdminOverviewClient() {
   return (
     <div className="space-y-8 page-enter">
       <div>
-        <h1 className="font-headline text-3xl font-extrabold">Platform overview</h1>
+        <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">Platform overview</h1>
         <p className="text-muted-foreground mt-1">
           Real-time SaaS metrics for AdNova AI
         </p>
@@ -123,7 +123,7 @@ export function AdminOverviewClient() {
           {data.recentActivity.map((item, i) => (
             <li
               key={`${item.at}-${i}`}
-              className="flex gap-3 text-sm border-b border-border/50 pb-2 last:border-0"
+              className="flex flex-col gap-1 border-b border-border/50 pb-2 text-sm last:border-0 sm:flex-row sm:gap-3"
             >
               <AppIcon
                 name={item.type === "admin" ? "shield" : "api"}
@@ -140,7 +140,7 @@ export function AdminOverviewClient() {
                   </p>
                 ) : null}
               </div>
-              <span className="text-[10px] text-muted-foreground shrink-0 ml-auto">
+              <span className="shrink-0 text-[10px] text-muted-foreground sm:ml-auto">
                 {new Date(item.at).toLocaleString()}
               </span>
             </li>

@@ -27,7 +27,7 @@ export function AdminStatCard({
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {label}
           </p>
-          <p className="mt-2 font-headline text-3xl font-extrabold text-foreground">
+          <p className="mt-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">
             {value}
           </p>
           {sub ? (

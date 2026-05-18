@@ -64,7 +64,7 @@ export function VideosGallery({ videos: initial }: { videos: Video[] }) {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-extrabold text-foreground mb-2">
+          <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">
             My Videos
           </h1>
           <p className="text-muted-foreground">{videos.length} videos created</p>

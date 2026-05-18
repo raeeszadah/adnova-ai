@@ -307,7 +307,7 @@ export default function CreateVideoWizard() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-headline font-extrabold text-foreground mb-2">
+        <h1 className="mb-2 font-headline text-2xl font-extrabold text-foreground sm:text-3xl">
           Create Video Ad
         </h1>
         <p className="text-muted-foreground">
@@ -382,7 +382,7 @@ export default function CreateVideoWizard() {
 
             <div className="bg-surface border border-border rounded-2xl p-5">
               <h2 className="text-base font-bold mb-3">Select Avatar</h2>
-              <div className="grid grid-cols-2 gap-3 max-h-52 overflow-y-auto pr-1">
+              <div className="grid max-h-52 grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                 {avatars.map((av) => {
                   const isSelected = selectedAvatar === av.avatar_id;
                   const imgUrl = av.preview_image_url;

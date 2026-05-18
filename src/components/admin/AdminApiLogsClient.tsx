@@ -17,7 +17,7 @@ export function AdminApiLogsClient() {
   return (
     <div className="space-y-6 page-enter">
       <div>
-        <h1 className="font-headline text-3xl font-extrabold">API logs</h1>
+        <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">API logs</h1>
         <p className="text-muted-foreground mt-1">Gemini, HeyGen, Remotion, and more</p>
       </div>
 

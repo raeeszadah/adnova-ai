@@ -16,7 +16,7 @@ export function AdminAnalyticsClient() {
   return (
     <div className="space-y-8 page-enter">
       <div>
-        <h1 className="font-headline text-3xl font-extrabold">Analytics</h1>
+        <h1 className="font-headline text-2xl font-extrabold sm:text-3xl">Analytics</h1>
         <p className="text-muted-foreground mt-1">Credits, usage, and growth</p>
       </div>
 

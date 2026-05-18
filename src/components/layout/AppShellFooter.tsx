@@ -22,7 +22,7 @@ export function AppShellFooter({ variant = "dashboard" }: AppShellFooterProps) {
     >
       <div className="app-shell-footer-glow pointer-events-none absolute inset-x-0 top-0 h-px" />
 
-      <div className="relative flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-8">
+      <div className="relative flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Link
             href={homeHref}
@@ -45,7 +45,7 @@ export function AppShellFooter({ variant = "dashboard" }: AppShellFooterProps) {
           <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
 
           <nav
-            className="flex flex-wrap items-center gap-1"
+            className="hidden flex-wrap items-center gap-1 lg:flex"
             aria-label="Quick navigation"
           >
             {links.map((item) => (
